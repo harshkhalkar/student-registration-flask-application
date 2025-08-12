@@ -282,10 +282,18 @@ ENDSSH
     - Use inline pipeline script or Jenkinsfile from repo.
 Use inline pipeline script or Jenkinsfile from repo
 5. Allow Jenkins to use sudo Docker (on both Jenkins & EC2 Live Server):
-    Run:
-   ```
+   
+   Run:
+   ```bash
    sudo visudo
    ```
-   
-   sudo vi-student
-   /code
+
+   add:
+   ```bash
+   jenkins ALL=(ALL) NOPASSWD: /usr/bin/apt, /usr/bin/docker, /usr/bin/docker-compose
+   ```
+
+   or:
+   ```bash
+   sudo usermod -aG docker jenkins
+   ```
