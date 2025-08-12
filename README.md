@@ -87,7 +87,7 @@ python app.py
 
 ### Step 6: Access Application
 
-Visit: http://<public-ip>:5000
+Visit: http://public-ip:5000
 
 ## File Structure (for Monolithic Setup)
 
