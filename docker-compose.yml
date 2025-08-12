@@ -1,0 +1,26 @@
+services:
+  py:
+    build:
+      context: .
+      Dockerfile: Dockerfile
+    container_name: pyapp
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: MySec@123
+      DB_NAME: studentsdb
+  db:
+    image: mysql
+    container_name: db
+    ports:
+      - "5000:5000"
+    environment:
+      MYSQL_ROOT_PASSWORD: MySec@123
+      MYSQL_DATABASE: studentsdb
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    
