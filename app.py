@@ -49,7 +49,7 @@ def view_students():
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM students")
+        cursor.execute("SELECT id, name, email, course FROM students")
         students = cursor.fetchall()
     except mysql.connector.Error as err:
         return f"Database error: {err}"
