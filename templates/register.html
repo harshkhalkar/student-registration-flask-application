@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        input, textarea, button, a.button-link {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button, .button-link {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            margin-top: 15px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+        button:hover, .button-link:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Register Student</h1>
+        <form method="post">
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" required>
+
+            <label for="phone">Phone:</label>
+            <input type="text" name="phone" id="phone" required>
+
+            <label for="course">Course:</label>
+            <input type="text" name="course" id="course" required>
+
+            <label for="address">Address:</label>
+            <textarea name="address" id="address" required></textarea>
+
+            <label for="contact">Contact:</label>
+            <input type="text" name="contact" id="contact" required>
+
+            <button type="submit">Register</button>
+        </form>
+
+        <!-- View Students Button -->
+        <a href="{{ url_for('view_students') }}" class="button-link">View Registered Students</a>
+    </div>
+</body>
+</html>
