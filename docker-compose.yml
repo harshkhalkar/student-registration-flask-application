@@ -2,7 +2,7 @@ services:
   py:
     build:
       context: .
-      Dockerfile: Dockerfile
+      dockerfile: Dockerfile
     container_name: pyapp
     ports:
       - "5000:5000"
