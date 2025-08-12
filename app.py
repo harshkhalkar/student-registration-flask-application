@@ -1,14 +1,15 @@
 from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
+import os
 
 app = Flask(__name__)
 
-# Database configuration
+# Database configuration from environment or defaults
 db_config = {
-    'host': 'host',
-    'user': 'user',
-    'password': 'db-user-pass',
-    'database': 'studentsdb'
+    'host': os.getenv('DB_HOST', 'db'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', 'MySec@123'),
+    'database': os.getenv('DB_NAME', 'studentsdb')
 }
 
 # Home page: Registration form
