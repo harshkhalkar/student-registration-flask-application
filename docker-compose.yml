@@ -1,5 +1,5 @@
 services:
-  py:
+  pyapp:
     build:
       context: .
       dockerfile: Dockerfile
@@ -17,7 +17,7 @@ services:
     image: mysql
     container_name: db
     ports:
-      - "5000:5000"
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: MySec@123
       MYSQL_DATABASE: studentsdb
