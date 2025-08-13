@@ -337,6 +337,12 @@ Use inline pipeline script or Jenkinsfile from repo
 
 # Phase 3: Microservices Architecture (Deployed via Kubernetes, Containerized + CI/CD)
 
+## Permission
+```
+sudo visudo
+jenkins ALL=(ALL) NOPASSWD: /usr/bin/apt, /usr/bin/kubectl
+```
+
 ## CI/CD Pipeline
 ```
 pipeline {
