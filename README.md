@@ -332,3 +332,15 @@ Use inline pipeline script or Jenkinsfile from repo
    ```bash
    sudo usermod -aG docker jenkins
    ```
+
+---
+## Learn More: Jenkins, Docker, Kubernetes
+
+### Jenkins
+https://github.com/harshkhalkar/jenkins.git
+
+### Docker
+https://github.com/harshkhalkar/Docker.git
+
+### Kubernetes
+https://github.com/harshkhalkar/kubernetes.git
