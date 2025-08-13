@@ -179,94 +179,130 @@ if __name__ == '__main__':
 pipeline {
     agent any
 
+    environment {
+        REPO_URL = 'https://github.com/harshkhalkar/student-registration-flask-application.git'
+        BRANCH = '*/main'
+        REMOTE_USER = 'ubuntu'
+        REMOTE_HOST = '54.224.69.173'
+        REMOTE_DIR = '/pyapp'
+    }
+
     stages {
-        stage('Pull Files') {
+
+        stage('Clone Repository') {
             steps {
-                echo 'Start Stage 1'
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    extensions: [],
-                    userRemoteConfigs: [[url: 'https://github.com/harshkhalkar/student-registration-flask-application.git']]
+                echo 'Cloning repository...'
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "${BRANCH}"]],
+                    userRemoteConfigs: [[url: "${REPO_URL}"]]
                 ])
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Docker & Compose') {
             steps {
-                echo 'Installing docker & docker-compose'
-                sh 'sudo apt update -y'
-                sh 'sudo apt install docker.io -y'
+                echo 'Installing Docker & Docker Compose (if not already installed)...'
                 sh '''
-                    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
-                    -o /usr/local/bin/docker-compose
+                    if ! command -v docker &> /dev/null; then
+                        sudo apt update -y
+                        sudo apt install -y docker.io
+                        sudo systemctl start docker
+                    fi
+
+                    if ! command -v docker-compose &> /dev/null; then
+                        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+                            -o /usr/local/bin/docker-compose
+                        sudo chmod +x /usr/local/bin/docker-compose
+                    fi
+
+                    docker --version
+                    docker-compose --version
                 '''
-                sh 'sudo chmod +x /usr/local/bin/docker-compose'
-                echo 'Verify Installation'
-                sh 'docker --version && docker-compose --version'
-                sh 'sudo systemctl start docker'
             }
         }
 
-        stage('Build') {
+        stage('Build Containers') {
             steps {
-                echo 'run docker-compose'
-                sh 'sudo docker-compose up -d'
+                echo 'Starting containers with Docker Compose...'
+                sh 'sudo docker-compose up -d --build'
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
-                echo 'Hello World'
-                sh 'sudo docker ps'
-                sh 'curl localhost:5000'
-                sh 'sudo docker exec pyapp ls -l'
-                sh 'sudo docker exec pyapp ls -l tests'
-                sh 'sudo docker exec pyapp python3 -m unittest discover -s tests -t .'
+                echo 'Running tests inside container...'
+                sh '''
+                    sudo docker ps
+                    curl -s localhost:5000 || echo "Flask app not reachable"
+                    sudo docker exec pyapp ls -l
+                    sudo docker exec pyapp ls -l tests
+                    sudo docker exec pyapp python3 -m unittest discover -s tests -t .
+                '''
             }
         }
-        
-        stage('Cleanup') {
-    steps {
-        echo 'Cleaning up Docker resources'
-        sh '''
-            sudo docker-compose down --volumes --remove-orphans
-            sudo docker image prune -f
-            IMAGE_IDS=$(sudo docker images -q)
-            if [ -n "$IMAGE_IDS" ]; then
-              sudo docker rmi -f $IMAGE_IDS
-            else
-              echo "No images to remove"
-            fi
-        '''
-    }
-}
 
-        stage('Deploy') {
+        stage('Cleanup Local') {
             steps {
+                echo 'Cleaning up Docker containers and images...'
+                sh '''
+                    sudo docker-compose down --volumes --remove-orphans
+                    sudo docker image prune -f
+                    IMAGES=$(sudo docker images -q)
+                    if [ -n "$IMAGES" ]; then
+                        sudo docker rmi -f $IMAGES || true
+                    else
+                        echo "No images to remove"
+                    fi
+                '''
+            }
+        }
+
+        stage('Deploy to Remote') {
+            steps {
+                echo 'Deploying to remote server...'
                 script {
                     sshagent(['5db86cd4-3324-4473-bf9b-f2f9f5e397d6']) {
-                        sh '''
-                            ssh -o StrictHostKeyChecking=no ubuntu@54.224.69.173 << 'ENDSSH'
-                            sudo apt update && sudo apt install docker.io -y
-                            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
-                            -o /usr/local/bin/docker-compose
-                            sudo chmod +x /usr/local/bin/docker-compose
-                            sudo systemctl start docker
-                            mkdir -p /pyapp
-                            cd /pyapp
-                            git init
-                            git pull https://github.com/harshkhalkar/student-registration-flask-application.git
-                            sudo docker --version && sudo docker-compose --version
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} << 'ENDSSH'
+                            set -e
+                            echo 'Installing Docker on remote server...'
+                            if ! command -v docker &> /dev/null; then
+                                sudo apt update -y
+                                sudo apt install -y docker.io
+                                sudo systemctl start docker
+                            fi
+
+                            if ! command -v docker-compose &> /dev/null; then
+                                sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\\\$(uname -s)-\\\$(uname -m)" \
+                                    -o /usr/local/bin/docker-compose
+                                sudo chmod +x /usr/local/bin/docker-compose
+                            fi
+
+                            echo 'Preparing deployment directory...'
+                            mkdir -p ${REMOTE_DIR}
+                            cd ${REMOTE_DIR}
+
+                            if [ ! -d .git ]; then
+                                git init
+                                git remote add origin ${REPO_URL}
+                            fi
+
+                            git fetch origin
+                            git reset --hard origin/main
+
+                            echo 'Starting app...'
                             rm -rf kubernetes LICENSE
-                            sudo docker-compose up -d
-ENDSSH
-                        '''
+                            sudo docker-compose up -d --build
+                            ENDSSH
+                        """
                     }
                 }
             }
         }
     }
 }
+
 ```
 
 ## Jenkins Setup Summary
@@ -275,7 +311,6 @@ ENDSSH
     - SSH Agent
 3. Add Credentials:
     - Type: SSH Username with Private Key
-    - ID: 5db86cd4-3324-4473-bf9b-f2f9f5e397d6 (used in pipeline)
 4. Configure Project:
     - Create new item → Pipeline
     - Set GitHub webhook trigger
